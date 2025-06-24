@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from message import print_title, print_stat, log_message, warn_message
 
 
@@ -64,6 +65,22 @@ def plot_pie(grouped: pd.Series, path: str = os.path.join(FIG_DIR, "sales_pie.pn
     plt.close()
 
 
+def plot_histogram(series: pd.Series,
+                   path: str = os.path.join(FIG_DIR, "sales_hist_price.png"),
+                   title: str = "Розподіл цін товарів") -> None:
+    """Будує та зберігає гістограму."""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    plt.figure(figsize=(6, 4))
+    sns.histplot(series, kde=True, bins=15)
+    plt.title(title)
+    plt.xlabel("Ціна, $")
+    plt.ylabel("Кількість")
+    plt.tight_layout()
+    plt.savefig(path, dpi=120)
+    log_message(f"Гістограма збережена у {path}")
+    plt.close()
+
+
 def plot_sales(grouped: pd.Series, path: str = FIG_PATH) -> None:
     """Будує й зберігає стовпчикову діаграму."""
     # Створюємо директорію, якщо її нема
@@ -79,12 +96,36 @@ def plot_sales(grouped: pd.Series, path: str = FIG_PATH) -> None:
     plt.close()
 
 
+def summary_stats(series: pd.Series, name: str = "Дохід") -> None:
+    """Виводить базові статистичні показники для series."""
+    print_title(f"Статистика: {name}")
+    stats = {
+        "count": series.count(),
+        "mean":  series.mean(),
+        "median": series.median(),
+        "std":   series.std(),
+        "min":   series.min(),
+        "max":   series.max(),
+    }
+    for k, v in stats.items():
+        print_stat(k, v)
+
+
 def main() -> None:
     """Точка входу."""
     df = load_data()
+
+    # Аналіз та агрегація
     grouped_sales = analyze_data(df)
-    plot_sales(grouped_sales)
-    plot_pie(grouped_sales)  # <--- нова функція
+
+    # Базові статистики (ціни + дохід)
+    summary_stats(df["price"], name="Ціна товару")
+    summary_stats(df["total"], name="Сумарний дохід (рядки)")
+
+    # Візуалізації
+    plot_sales(grouped_sales)          # bar-chart
+    plot_pie(grouped_sales)            # pie-chart
+    plot_histogram(df["price"])        # histogram
 
 
 if __name__ == "__main__":
