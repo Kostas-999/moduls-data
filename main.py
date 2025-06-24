@@ -41,7 +41,27 @@ def analyze_data(df: pd.DataFrame) -> pd.DataFrame:
     print_title("Продажі за продуктами")
     grouped = df.groupby("product")["total"].sum()
     print(grouped, "\n")
+
+    top_product = grouped.idxmax()
+    top_value = grouped.max()
+    print_title("Найуспішніший продукт")
+    print_stat(top_product, top_value)
+
     return grouped
+
+
+def plot_pie(grouped: pd.Series, path: str = os.path.join(FIG_DIR, "sales_pie.png")) -> None:
+    """Будує кругову діаграму продажів за продуктами."""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    plt.figure(figsize=(5, 5))
+    grouped.plot(kind="pie", autopct="%1.1f%%", startangle=90)
+    plt.title("Розподіл доходу за продуктами")
+    plt.ylabel("")  # прибираємо вісь Y
+    plt.tight_layout()
+    plt.savefig(path, dpi=120)
+    log_message(f"Кругова діаграма збережена у {path}")
+    plt.close()
 
 
 def plot_sales(grouped: pd.Series, path: str = FIG_PATH) -> None:
@@ -64,6 +84,7 @@ def main() -> None:
     df = load_data()
     grouped_sales = analyze_data(df)
     plot_sales(grouped_sales)
+    plot_pie(grouped_sales)  # <--- нова функція
 
 
 if __name__ == "__main__":
